@@ -6,6 +6,4 @@ WORKDIR /home/app
 
 COPY . .
 
-EXPOSE 5184
-
-CMD ["dotnet", "watch", "run"]
+CMD ["dotnet", "run"]
