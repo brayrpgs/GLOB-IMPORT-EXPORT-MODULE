@@ -12,7 +12,7 @@ This repository contains the source code for the **GLOB-IMPORT-EXPORT-MODULE**, 
 
 ---
 
-# 📊 Jira Friendly Viewer
+## 📊 Jira Friendly Viewer
 
 A cleaner and more user-friendly way to visualize **Jira** projects.  
 This project allows you to **import and export** Jira data and view it in a simplified interface — no complex setup, just a better way to look at your projects.
@@ -47,7 +47,7 @@ Follow these instructions to get a development environment running.
 
 1.  **Clone the repository**
     ```sh
-    git clone (https://github.com/brayrpgs/GLOB-IMPORT-EXPORT-MODULE.git)
+    git clone https://github.com/brayrpgs/GLOB-IMPORT-EXPORT-MODULE.git
     ```
 2.  **Navigate to the API directory**
     ```sh
