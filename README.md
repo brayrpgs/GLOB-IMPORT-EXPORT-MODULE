@@ -12,16 +12,10 @@ This repository contains the source code for the **GLOB-IMPORT-EXPORT-MODULE**, 
 
 ---
 
-## 📊 Jira Friendly Viewer
-
-A cleaner and more user-friendly way to visualize **Jira** projects.  
-This project allows you to **import and export** Jira data and view it in a simplified interface — no complex setup, just a better way to look at your projects.
-
 ## ✨ Features
 
-- **Project visualization**: Load Jira project data and display it in a more organized, easy-to-read format.  
-- **Import & export**: Bring data from Jira and export it in a simplified format.  
-- **User-friendly interface**: Focused on what matters, without the clutter.  
+- **Project visualization**: Load Jira project data.  
+- **Import & export**: Bring data from Jira and export it in a simplified format.   
 - **Containerized**: Ready to run in any **Docker**-compatible environment. 
 
 ---
