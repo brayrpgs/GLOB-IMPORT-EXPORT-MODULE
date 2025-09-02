@@ -12,13 +12,17 @@ This repository contains the source code for the **GLOB-IMPORT-EXPORT-MODULE**, 
 
 ---
 
+# 📊 Jira Friendly Viewer
+
+A cleaner and more user-friendly way to visualize **Jira** projects.  
+This project allows you to **import and export** Jira data and view it in a simplified interface — no complex setup, just a better way to look at your projects.
+
 ## ✨ Features
 
-- **Project Management**: Create, update, and manage projects.
-- **Issue Tracking**: Full CRUD operations for issues, including status and priority management.
-- **Sprint Planning**: Organize issues into sprints for agile development cycles.
-- **User Association**: Assign users to projects.
-- **Containerized**: Ready for deployment in any Docker-compatible environment.
+- **Project visualization**: Load Jira project data and display it in a more organized, easy-to-read format.  
+- **Import & export**: Bring data from Jira and export it in a simplified format.  
+- **User-friendly interface**: Focused on what matters, without the clutter.  
+- **Containerized**: Ready to run in any **Docker**-compatible environment. 
 
 ---
 
@@ -38,13 +42,12 @@ Follow these instructions to get a development environment running.
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- A code editor like [Visual Studio Code](https://code.visualstudio.com/) or [Visual Studio](https://visualstudio.microsoft.com/)
 
 ### Local Installation
 
 1.  **Clone the repository**
     ```sh
-    git clone https://github.com/your_username/your_repository.git
+    git clone (https://github.com/brayrpgs/GLOB-IMPORT-EXPORT-MODULE.git)
     ```
 2.  **Navigate to the API directory**
     ```sh
@@ -60,31 +63,18 @@ Follow these instructions to get a development environment running.
     ```
 The API will be running on the port specified in `Properties/launchSettings.json`.
 
-### 🐳 Docker Installation
+### 🐳 Docker Start
 
-Alternatively, you can build and run the service using Docker.
+This service runs automatically as a **Dockerized microservice** — no extra setup required.  
 
-1.  **Navigate to the API directory**
-    ```sh
-    cd GLOB-IMPORT-EXPORT-MODULE/api
-    ```
-2.  **Build the Docker image**
-    ```sh
-    docker build -t glob-api .
-    ```
-3.  **Run the Docker container**
-    ```sh
-    docker run -p 8080:8080 glob-api
-    ```
-The service will be accessible at `http://localhost:8080`.
-
----
+By default, it will be available at:  
+👉 `http://localhost:5184`
 
 ## 📖 API Usage
 
 Once the application is running, you can explore and interact with the API endpoints through the Swagger UI.
 
-- **URL**: `http://localhost:<port>/swagger`
+- **URL**: `http://localhost:5184/swagger`
 
 The Swagger interface provides detailed documentation for all available endpoints, including request and response schemas.
 
