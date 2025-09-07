@@ -2,7 +2,8 @@ using api.Models;
 using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
-using System.IO;
+using System.Text.Json;
+
 namespace api.Services
 {
     public interface ICSVService
@@ -12,6 +13,43 @@ namespace api.Services
 
     public class CSVService : ICSVService
     {
+
+        public static readonly string[] irrelevantColumns = [
+            "Status Category Changed",
+            "Status Category",
+            "Parent",
+            "Comment",
+            "Custom field (Vulnerability)",
+            "Custom field (Team)",
+            "Custom field (Rank)",
+            "Custom field (Issue color)",
+            "Custom field (Development)",
+            "Outward issue link (Blocks)",
+            "Inward issue link (Blocks)",
+            "Security Level",
+            "Î£ Time Spent",
+            "Î£ Remaining Estimate",
+            "Î£ Original Estimate",
+            "Work Ratio",
+            "Time Spent",
+            "Remaining Estimate",
+            "Original estimate",
+            "Watchers",
+            "Watchers Id",
+            "Environment",
+            "Last Viewed",
+            "Updated",
+            "Project lead id",
+            "Project type",
+            "Project key",
+            "Issue id",
+            "Issue key"
+
+        ];
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true
+        };
 
         public CsvReader GetCsvReader(string base64Content)
         {
@@ -49,16 +87,49 @@ namespace api.Services
             return true;
         }
 
-        public bool UploadCSV(UploadedBase64 csvBase64)
+        public string GetJsonDataFromCSV(CsvReader csv)
         {
-            var csv = GetCsvReader(csvBase64.Base64Content!);
+            var records = new List<Dictionary<string, object>>();
+            
+            if (!csv.Read()) return "[]";
+            csv.ReadHeader();
 
-            if (!ValidateCSV(csv)) return false;
+            var headers = csv.HeaderRecord;
 
-            return true;
+            if (headers == null) return "[]";
+
+            var relevantHeaders = headers
+                .Where(h => !irrelevantColumns.Contains(h, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+
+            while (csv.Read())
+            {
+                var row = new Dictionary<string, object>();
+
+                foreach (var header in relevantHeaders)
+                {
+                    var value = csv.GetField(header);
+                    row[header] = value ?? string.Empty;
+                }
+
+                records.Add(row);
+            }
+
+            return JsonSerializer.Serialize(records, JsonOptions);
         }
 
 
+        public bool UploadCSV(UploadedBase64 csvBase64)
+        {
+            var csv = GetCsvReader(csvBase64.Base64Content!);
+            if (!ValidateCSV(csv)) return false;
+
+            csv = GetCsvReader(csvBase64.Base64Content!);
+            string dataFromCsv = GetJsonDataFromCSV(csv);
+
+            Console.WriteLine(dataFromCsv);
+            return true;
+        }
 
     }
 }

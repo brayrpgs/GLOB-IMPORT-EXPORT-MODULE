@@ -21,7 +21,6 @@ namespace api.Models
         public DateTime ResolveAt { get; set; }
         public DateTime DueDate { get; set; }
         public DateTime CustomStartDate { get; set; }
-
         public IssueStatus Status { get; set; }
     }
 }
