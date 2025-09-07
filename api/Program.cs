@@ -1,12 +1,12 @@
-using Microsoft.AspNetCore.Http.HttpResults;
+using api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+builder.Services.AddScoped<ICSVService, CSVService>();
 
 var app = builder.Build();
 
