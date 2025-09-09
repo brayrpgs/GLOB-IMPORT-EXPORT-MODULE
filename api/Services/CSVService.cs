@@ -8,7 +8,7 @@ namespace api.Services
 {
     public interface ICSVService
     {
-        bool UploadCSV(UploadedBase64 csvBase4);
+        List<IssueFromCSV>? UploadCSV(UploadedBase64 csvBase64);
     }
 
     public class CSVService : ICSVService
@@ -42,17 +42,27 @@ namespace api.Services
             "Project lead id",
             "Project type",
             "Project key",
-            "Issue id",
             "Issue key"
 
         ];
-        private static readonly JsonSerializerOptions JsonOptions = new()
+
+        public static readonly CsvConfiguration Config = new(CultureInfo.InvariantCulture)
         {
-            WriteIndented = true
+            PrepareHeaderForMatch = args => args.Header
+                .Replace(" ", "")
+                .Replace("(", "")
+                .Replace(")", "")
+                .Replace("-", "")
+                .Replace("Î", ""),
+            MissingFieldFound = null,
+            HeaderValidated = null,
         };
+
 
         public CsvReader GetCsvReader(string base64Content)
         {
+
+
             var commaIndex = base64Content.IndexOf(',');
             if (commaIndex >= 0)
                 base64Content = base64Content[(commaIndex + 1)..];
@@ -61,12 +71,7 @@ namespace api.Services
 
             var memoryStream = new MemoryStream(bytes);
             var reader = new StreamReader(memoryStream);
-            var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = true,
-                IgnoreBlankLines = true,
-                BadDataFound = null
-            });
+            var csv = new CsvReader(reader, Config);
 
             return csv;
         }
@@ -87,48 +92,70 @@ namespace api.Services
             return true;
         }
 
-        public string GetJsonDataFromCSV(CsvReader csv)
+        public List<IssueFromCSV> GetDataFromCVS(CsvReader csv)
         {
-            var records = new List<Dictionary<string, object>>();
-            
-            if (!csv.Read()) return "[]";
-            csv.ReadHeader();
 
+            csv.Read();
+            csv.ReadHeader();
             var headers = csv.HeaderRecord;
 
-            if (headers == null) return "[]";
+            var relevantHeaders = headers!
+                .Where(h =>
+                {
+                    
+                    var normalized = h.Replace(" ", "")
+                                    .Replace("(", "")
+                                    .Replace(")", "")
+                                    .Replace("-", "")
+                                    .Replace("Î", "")
+                                    .ToLower();
 
-            var relevantHeaders = headers
-                .Where(h => !irrelevantColumns.Contains(h, StringComparer.OrdinalIgnoreCase))
+                    return !irrelevantColumns.Any(c =>
+                        c.Replace(" ", "")
+                        .Replace("(", "")
+                        .Replace(")", "")
+                        .Replace("-", "")
+                        .Replace("Î", "")
+                        .ToLower() == normalized);
+                })
+                .Select(h => h.Replace(" ", "")
+                            .Replace("(", "")
+                            .Replace(")", "")
+                            .Replace("-", "")
+                            .Replace("Î", "")) 
                 .ToList();
 
-            while (csv.Read())
+            
+            var map = new DefaultClassMap<IssueFromCSV>();
+            foreach (var header in relevantHeaders)
             {
-                var row = new Dictionary<string, object>();
-
-                foreach (var header in relevantHeaders)
+                
+                var prop = typeof(IssueFromCSV).GetProperties()
+                    .FirstOrDefault(p => string.Equals(p.Name, header, StringComparison.OrdinalIgnoreCase));
+                if (prop != null)
                 {
-                    var value = csv.GetField(header);
-                    row[header] = value ?? string.Empty;
+                    map.Map(typeof(IssueFromCSV), prop).Name(header);
                 }
-
-                records.Add(row);
             }
 
-            return JsonSerializer.Serialize(records, JsonOptions);
+           
+            csv.Context.RegisterClassMap(map);
+
+            
+            List<IssueFromCSV> records = csv.GetRecords<IssueFromCSV>().ToList();
+
+            return records;
+
         }
 
-
-        public bool UploadCSV(UploadedBase64 csvBase64)
+        public List<IssueFromCSV>? UploadCSV(UploadedBase64 csvBase64)
         {
             var csv = GetCsvReader(csvBase64.Base64Content!);
-            if (!ValidateCSV(csv)) return false;
+            if (!ValidateCSV(csv)) return null;
 
             csv = GetCsvReader(csvBase64.Base64Content!);
-            string dataFromCsv = GetJsonDataFromCSV(csv);
 
-            Console.WriteLine(dataFromCsv);
-            return true;
+            return GetDataFromCVS(csv) ?? null;
         }
 
     }

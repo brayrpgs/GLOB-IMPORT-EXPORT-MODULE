@@ -13,22 +13,6 @@ namespace api.Controllers
         /// Uploads a base64-encoded CSV file, validates its structure, 
         /// and processes it into JSON data.
         /// </summary>
-        /// <remarks>
-        /// **Request Example**
-        ///
-        ///     POST /api/csv/upload
-        ///
-        ///     {
-        ///         "base64Content": "data:text/csv;base64,UmVzdW1lbixJc3N1ZSBrZXks..."
-        ///     }
-        ///
-        /// **Behavior**
-        /// - Validates that the request body is not empty.
-        /// - Ensures the content is a valid base64-encoded CSV.
-        /// - Checks that the CSV has a header row and consistent columns.
-        /// - On success, processes the file and returns a 200 OK response.
-        /// - Returns error codes for invalid or unsupported requests.
-        /// </remarks>
         /// <param name="csvBase64">
         /// The base64-encoded CSV payload. The value may include a prefix such as 
         /// `data:text/csv;base64,`.
@@ -41,7 +25,7 @@ namespace api.Controllers
         /// <response code="415">Unsupported Media Type</response>
         /// <response code="500">Internal Server Error</response>
         [HttpPost]
-        public IActionResult UploadCSV([FromBody] UploadedBase64 csvBase64)
+        public ActionResult<IssueFromCSV> UploadCSV([FromBody] UploadedBase64 csvBase64)
         {
             try
             {
@@ -54,7 +38,7 @@ namespace api.Controllers
                     };
                     return BadRequest(response);
                 }
-
+                /*
                 if (!_csvService.UploadCSV(csvBase64))
                 {
                     var response = new ApiResponse
@@ -71,6 +55,11 @@ namespace api.Controllers
                     StatusCode = "200"
                 };
                 return Ok(okResponse);
+                */
+                var records = _csvService.UploadCSV(csvBase64); 
+
+                
+                return Ok(records);
             }
             catch (FormatException)
             {
