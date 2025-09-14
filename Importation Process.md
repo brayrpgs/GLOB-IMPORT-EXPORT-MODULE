@@ -10,7 +10,7 @@ Additionally, ensure that the project is configured in **English**, and that all
 
 Log in to your Jira account and navigate to your dashboard.
 
-![img1.jpg](img1.jpg)
+![Step 1: Access Jira](https://raw.githubusercontent.com/usuario/repositorio/rama/images/img1.jpg)
 
 ### Step 2: Navigate to “All Work” 📋
 
