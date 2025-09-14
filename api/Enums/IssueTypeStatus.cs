@@ -2,11 +2,10 @@ namespace api.Enums
 {
     public enum IssueTypeStatus
     {
-        Bug,
-        Task,
-        Story,
-        Epic,
-        Subtask,
-        Improvement
+        Bug = 1,
+        Task = 2,
+        Story = 3,
+        Epic = 4,
+        Other = 5
     }
 }

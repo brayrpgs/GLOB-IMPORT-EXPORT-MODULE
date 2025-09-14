@@ -6,18 +6,22 @@ namespace api.Mappings
     {
         public static Project? ToProject(List<IssueFromCSV>? issueFromCSV)
         {
-            if (issueFromCSV == null) return null;
+            // Validate that the list is not null and has at least one item
+            if (issueFromCSV == null || issueFromCSV.Count == 0) return null;
 
-            if (issueFromCSV[0] == null) return null;
+            var first = issueFromCSV[0];
 
-            Project project = new();
+            // Extra check in case the first record is null
+            if (first == null) return null;
 
-            project.Name = issueFromCSV[0].Projectname;
-
-            project.Description = issueFromCSV[0].Projectdescription;
+            // Map relevant fields to a Project entity
+            Project project = new()
+            {
+                Name = first.Projectname,
+                Description = string.IsNullOrWhiteSpace(first.Projectdescription) ? "No project description": first.Projectdescription
+            };
 
             return project;
-
         }
     }
 }
