@@ -1,5 +1,4 @@
 using api.Models;
-using api.Enums;
 using api.Database.Connection;
 using Npgsql;
 using System.Text.Json;
@@ -8,6 +7,7 @@ namespace api.Repository
 {
     public class IssueRepository
     {
+        // JSON serializer options: case-insensitive property names
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNameCaseInsensitive = true
@@ -15,10 +15,12 @@ namespace api.Repository
 
         public Issue? Post(Issue issue)
         {
+            // Get the database connection instance
             var conn = Connection.GetInstance();
 
             try
             {
+                // Create a new NpgsqlCommand to call the stored procedure "POST_ISSUE"
                 using var cmd = new NpgsqlCommand(
                     "CALL PUBLIC.\"POST_ISSUE\"(" +
                     "@P_SUMMARY, @P_DESCRIPTION, @P_RESOLVE_AT, @P_DUE_DATE, @P_VOTES, @P_ORIGINAL_ESTIMATION, " +
@@ -27,6 +29,7 @@ namespace api.Repository
                     conn
                 );
 
+                // Add parameters for the stored procedure, using defaults if null
                 cmd.Parameters.AddWithValue("P_SUMMARY", NpgsqlTypes.NpgsqlDbType.Text, issue.Summary ?? "No summary");
                 cmd.Parameters.AddWithValue("P_DESCRIPTION", NpgsqlTypes.NpgsqlDbType.Text, issue.Description ?? "No description");
                 cmd.Parameters.AddWithValue("P_RESOLVE_AT", NpgsqlTypes.NpgsqlDbType.Date, issue.ResolveAt ?? DateTime.MaxValue);
@@ -44,23 +47,29 @@ namespace api.Repository
                 cmd.Parameters.AddWithValue("P_SPRINT_ID", NpgsqlTypes.NpgsqlDbType.Bigint, issue.SprintId ?? (object)DBNull.Value);
                 cmd.Parameters.AddWithValue("P_STATUS", NpgsqlTypes.NpgsqlDbType.Bigint, (long?)(issue.Status ?? 0));
 
+                // Execute the command and get the result
                 using var reader = cmd.ExecuteReader();
 
+                // If no rows returned, insertion failed
                 if (!reader.Read())
                     return null;
 
+                // Get JSON string from the first column
                 var json = reader.GetValue(0)?.ToString() ?? "{}";
 
-                // Reemplazar valores especiales PostgreSQL
+                // Replace PostgreSQL special values for dates
                 json = json.Replace("\"-infinity\"", $"\"{DateTime.MinValue:yyyy-MM-dd}\"")
                            .Replace("\"infinity\"", $"\"{DateTime.MaxValue:yyyy-MM-dd}\"");
 
+                // Deserialize JSON into Issue object
                 var createdIssue = JsonSerializer.Deserialize<Issue>(json, JsonOptions);
 
+                // Return the created Issue
                 return createdIssue;
             }
             finally
             {
+                // Close the database connection
                 Connection.CloseConnection();
             }
         }

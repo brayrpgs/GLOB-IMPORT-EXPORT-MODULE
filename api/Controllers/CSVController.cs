@@ -1,7 +1,4 @@
-using api.Database.Connection;
-using api.Enums;
 using api.Models;
-using api.Repository;
 using api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +11,7 @@ namespace api.Controllers
 
         /// <summary>
         /// Uploads a base64-encoded CSV file, validates its structure, 
-        /// and processes it into JSON data.
+        /// and inserts the records into the database.
         /// </summary>
         /// <param name="csvBase64">
         /// The base64-encoded CSV payload. The value may include a prefix such as 
@@ -23,7 +20,8 @@ namespace api.Controllers
         /// <returns>
         /// A standardized <see cref="ApiResponse"/> indicating success or failure.
         /// </returns>
-        /// <response code="200">Ok</response>
+        /// <response code="201">Created</response>
+        /// <response code="422">Unprocessable Entity</response>
         /// <response code="400">Bad Request</response>
         /// <response code="415">Unsupported Media Type</response>
         /// <response code="500">Internal Server Error</response>
@@ -32,85 +30,66 @@ namespace api.Controllers
         {
             try
             {
-                // Check if Base64 content is null or empty → return 400 Bad Request
-                if (string.IsNullOrEmpty(csvBase64.Base64Content))
+                // Validation: empty content → 400
+                if (string.IsNullOrWhiteSpace(csvBase64.Base64Content))
                 {
-                    var response = new ApiResponse
+                    return StatusCode(400, new ApiResponse
                     {
                         Title = "Bad Request",
-                        StatusCode = "400"
-                    };
-                    return BadRequest(response);
+                        StatusCode = 400
+                    });
                 }
 
-                // Call service to process CSV (decode, validate, convert to records)
+                // Process CSV and insert into the database
                 bool result = _csvService.InsertData(csvBase64);
 
-                // If successful → return 200 OK 
-                return Ok(result);
+                if (result)
+                {
+                    // If records were inserted successfully → 201
+                    return StatusCode(201, new ApiResponse
+                    {
+                        Title = "Created",
+                        StatusCode = 201
+                    });
+                }
+
+                // If no records were inserted → 422
+                return StatusCode(422, new ApiResponse
+                {
+                    Title = "Unprocessable Entity",
+                    StatusCode = 422
+                });
             }
-            catch (FormatException fe)
+            catch (FormatException)
             {
-                Console.WriteLine(fe);
-                // Handle invalid Base64 or CSV format → return 400 Bad Request
-                var response = new ApiResponse
+                // If the Base64 format is invalid → 400
+                return StatusCode(400, new ApiResponse
                 {
                     Title = "Bad Request",
-                    StatusCode = "400"
-                };
-                return BadRequest(response);
+                    StatusCode = 400
+                });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error: {ex}");
 
-                // If exception indicates wrong file type → return 415 Unsupported Media Type
                 if (ex.Message == "415")
                 {
-                    ApiResponse unsupportedMediaTypeResponse = new()
+                    // Unsupported media type → 415
+                    return StatusCode(415, new ApiResponse
                     {
                         Title = "Unsupported Media Type",
-                        StatusCode = "415"
-                    };
-                    return StatusCode(415, unsupportedMediaTypeResponse);
+                        StatusCode = 415
+                    });
                 }
-                else
+
+                // Generic error → 500
+                return StatusCode(500, new ApiResponse
                 {
-                    // Any other error → log exception and return 500 Internal Server Error
-                    Console.WriteLine($"Error: {ex}");
-                    var response = new ApiResponse
-                    {
-                        Title = "Internal Server Error",
-                        StatusCode = "500"
-                    };
-                    return StatusCode(500, response);
-                }
-
+                    Title = "Internal Server Error",
+                    StatusCode = 500
+                });
             }
-        }
-
-/*
-        [HttpGet]
-        public ActionResult<List<IssueType>> test()
-        {
-            IssueTypeRepository issueTypeRepository = new();
-
-            IssueTypeStatus[]? enums = IssueTypeStatus.GetValues<IssueTypeStatus>();
-
-            List<IssueType?> myList = [];
-
-            for (int i = 0; i <= enums.Length - 1; i++)
-            {
-                IssueType issueType = new IssueType() { Status = enums[i], Priority = IssueTypePriority.Low };
-                myList.Add(issueTypeRepository.Post(issueType));
-            }
-
-            return Ok(myList);
-        }
-  */      
-        [HttpGet]
-        public ActionResult<Issue> TestDos()
-        {
-            return Ok(new IssueRepository().Post(new Issue()));
         }
     }
 }

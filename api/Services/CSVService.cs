@@ -10,44 +10,25 @@ namespace api.Services
 {
     public interface ICSVService
     {
-        List<IssueFromCSV>? UploadCSV(UploadedBase64 csvBase64);
-        public bool InsertData(UploadedBase64 csvBase64);
+        List<IssueFromCSV>? GetIssuesFromCSV(UploadedBase64 csvBase64);
+        bool InsertData(UploadedBase64 csvBase64);
     }
 
     public class CSVService : ICSVService
     {
+        // Columns to ignore when mapping CSV to IssueFromCSV
         private static readonly HashSet<string> IrrelevantColumns = new(StringComparer.OrdinalIgnoreCase)
         {
-            "StatusCategoryChanged",
-            "StatusCategory",
-            "Parent",
-            "Comment",
-            "CustomfieldVulnerability",
-            "CustomfieldTeam",
-            "CustomfieldRank",
-            "CustomfieldIssuecolor",
-            "CustomfieldDevelopment",
-            "OutwardissuelinkBlocks",
-            "InwardissuelinkBlocks",
-            "SecurityLevel",
-            "ΣTimeSpent",
-            "ΣRemainingEstimate",
-            "ΣOriginalEstimate",
-            "WorkRatio",
-            "TimeSpent",
-            "RemainingEstimate",
-            "Originalestimate",
-            "Watchers",
-            "WatchersId",
-            "Environment",
-            "LastViewed",
-            "Updated",
-            "Projectleadid",
-            "Projecttype",
-            "Projectkey",
-            "Issuekey"
+            "StatusCategoryChanged", "StatusCategory", "Parent", "Comment",
+            "CustomfieldVulnerability", "CustomfieldTeam", "CustomfieldRank",
+            "CustomfieldIssuecolor", "CustomfieldDevelopment", "OutwardissuelinkBlocks",
+            "InwardissuelinkBlocks", "SecurityLevel", "ΣTimeSpent", "ΣRemainingEstimate",
+            "ΣOriginalEstimate", "WorkRatio", "TimeSpent", "RemainingEstimate",
+            "Originalestimate", "Watchers", "WatchersId", "Environment", "LastViewed",
+            "Updated", "Projectleadid", "Projecttype", "Projectkey", "Issuekey"
         };
 
+        // CSV configuration with custom header normalization
         private static readonly CsvConfiguration Config = new(CultureInfo.InvariantCulture)
         {
             PrepareHeaderForMatch = args => NormalizeHeader(args.Header),
@@ -55,6 +36,7 @@ namespace api.Services
             HeaderValidated = null
         };
 
+        // Clean data
         private static string NormalizeHeader(string header)
         {
             return header.Replace(" ", "")
@@ -65,6 +47,7 @@ namespace api.Services
                          .Replace("£", "");
         }
 
+        // CSV Reader
         private static CsvReader CreateCsvReader(string base64Content)
         {
             var commaIndex = base64Content.IndexOf(',');
@@ -74,6 +57,8 @@ namespace api.Services
             var reader = new StreamReader(new MemoryStream(bytes), Encoding.UTF8);
             return new CsvReader(reader, Config);
         }
+
+        // Validate CSV
 
         private static bool ValidateCSV(CsvReader csv)
         {
@@ -90,16 +75,19 @@ namespace api.Services
             return true;
         }
 
+        // Get data from CSV
         private static List<IssueFromCSV> GetDataFromCSV(CsvReader csv)
         {
             csv.Read();
             csv.ReadHeader();
             var headers = csv.HeaderRecord ?? Array.Empty<string>();
 
+            // Keep only relevant headers
             var relevantHeaders = headers
                 .Where(h => !IrrelevantColumns.Contains(NormalizeHeader(h)))
                 .ToList();
 
+            // Map CSV headers to IssueFromCSV properties
             var map = new DefaultClassMap<IssueFromCSV>();
             var properties = typeof(IssueFromCSV).GetProperties();
 
@@ -114,42 +102,61 @@ namespace api.Services
             }
 
             csv.Context.RegisterClassMap(map);
+
+            // Return all records
             return [.. csv.GetRecords<IssueFromCSV>()];
         }
 
-        public List<IssueFromCSV>? UploadCSV(UploadedBase64 csvBase64)
-        {
-            var csv = CreateCsvReader(csvBase64.Base64Content!);
-            if (!ValidateCSV(csv)) throw new Exception("415");
 
-            csv = CreateCsvReader(csvBase64.Base64Content!);
-            return GetDataFromCSV(csv);
+        public List<IssueFromCSV>? GetIssuesFromCSV(UploadedBase64 csvBase64)
+        {
+            try
+            {
+                var csv = CreateCsvReader(csvBase64.Base64Content!);
+
+                if (!ValidateCSV(csv))
+                    throw new Exception("415"); // Invalid CSV structure
+
+                csv = CreateCsvReader(csvBase64.Base64Content!);
+                return GetDataFromCSV(csv);
+            }
+            catch (BadDataException)
+            {
+                // Any CSV parsing error → treat as Unsupported Media Type
+                throw new Exception("415");
+            }
+            catch (HeaderValidationException)
+            {
+                // Header mismatch → also Unsupported Media Type
+                throw new Exception("415");
+            }
         }
 
+        // Insert data parsed from GetIssuesFromCSV into the database
         public bool InsertData(UploadedBase64 csvBase64)
         {
-            // recover all data from csv
-            List<IssueFromCSV>? issueFromCSVs = UploadCSV(csvBase64);
+            // Parse CSV into IssueFromCSV objects
+            List<IssueFromCSV>? issueFromCSVs = GetIssuesFromCSV(csvBase64);
 
-            // create the project from class mappers
+            // Map CSV data to Project entity
             Project? project = ProjectMapper.ToProject(issueFromCSVs);
 
-            // insert proyect to DB
+            // Insert project into the database
             List<Project>? projects = new ProjectRepository().PostProject(project!);
 
-            // create a new issue
+            // Initialize Issue template
             Issue issue = new();
 
-            // initialice every issue for insert to database
+            // Initialize ImportService for batch issue insertion
             ImportService importService = new(projects![0], issue);
 
-            issueFromCSVs!.ForEach(issue =>
+            // Build and insert each issue from CSV
+            issueFromCSVs!.ForEach(issueData =>
             {
-                importService.BuildIssue(issue);   
+                importService.BuildIssue(issueData);
             });
 
             return true;
         }
-
     }
 }

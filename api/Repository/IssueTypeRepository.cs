@@ -8,6 +8,7 @@ namespace api.Repository
 {
     public class IssueTypeRepository
     {
+        // JSON serializer options: case-insensitive property names
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNameCaseInsensitive = true
@@ -15,16 +16,17 @@ namespace api.Repository
 
         public IssueType? Post(IssueType issueType)
         {
+            // Get database connection
             var conn = Connection.GetInstance();
 
             try
             {
-                // Prepare command for the stored procedure
+                // Prepare command for the stored procedure "POST_ISSUE_TYPE"
                 using var cmd = new NpgsqlCommand(
                     "CALL PUBLIC.\"POST_ISSUE_TYPE\"(@P_STATUS, @P_PRIORITY, NULL)", conn
                 );
 
-                // Assign parameters with safe fallbacks (avoid null DB values)
+                // Assign parameters with safe fallbacks to avoid nulls
                 cmd.Parameters.AddWithValue(
                     "P_STATUS",
                     NpgsqlTypes.NpgsqlDbType.Bigint,
@@ -37,23 +39,25 @@ namespace api.Repository
                     (long)(issueType.Priority ?? IssueTypePriority.Low)
                 );
 
+                // Execute the command and get the result
                 using var reader = cmd.ExecuteReader();
 
+                // If no rows returned, insertion failed
                 if (!reader.Read())
                     return null;
 
                 // Retrieve JSON result from the first column
                 var json = reader.GetValue(0)?.ToString() ?? "[]";
 
-                // Deserialize JSON into a list of IssueType objects using cached options
+                // Deserialize JSON into a list of IssueType objects
                 var issueTypes = JsonSerializer.Deserialize<List<IssueType>>(json, JsonOptions);
 
-                // Return the first IssueType from the list (if any)
+                // Return the first IssueType from the list, if available
                 return issueTypes?.FirstOrDefault();
             }
             finally
             {
-                // Ensure DB connection is always closed, even on exception
+                // Ensure DB connection is closed even if an exception occurs
                 Connection.CloseConnection();
             }
         }
