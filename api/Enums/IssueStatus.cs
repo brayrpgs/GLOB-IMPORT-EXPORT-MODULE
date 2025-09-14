@@ -2,8 +2,8 @@ namespace api.Enums
 {
     public enum IssueStatus
     {
-        toDo,
-        InProgress, 
-        Done
+        ToDo = 1,
+        InProgress = 2, 
+        Done = 3
     }
 }
