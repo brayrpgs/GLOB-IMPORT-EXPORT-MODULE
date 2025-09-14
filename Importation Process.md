@@ -16,25 +16,25 @@ Log in to your Jira account and navigate to your dashboard.
 
 Go to the **All Work** section to view all issues associated with your projects.
 
-![img2.jpg](img2.jpg)
+![img2](https://github.com/user-attachments/assets/810cfb4a-9a9a-490d-b6d3-87d198259419)
 
 ### Step 3: Export the Project Data 📤
 
 Click on the **Export** icon located on the page.
 
-![img3.jpg](img3.jpg)
+![img3](https://github.com/user-attachments/assets/ef954a61-c85e-4a14-82aa-10158811c2cc)
 
 ### Step 4: Choose CSV Export 📄
 
 Select **Export CSV (All Fields)** to ensure that all issue data is included in the export.
 
-![img4.jpg](img4.jpg)
+![img4](https://github.com/user-attachments/assets/2eeb9a1c-62cc-46bf-ad57-8ba368a9629e)
 
 ### Step 5: Download the Exported File 💾
 
 Download the CSV file to your local machine.
 
-![img5.jpg](img5.jpg)
+![img5](https://github.com/user-attachments/assets/de6c20dd-0cca-4d12-8727-3e1aca465775)
 
 ### Step 6: Import the Project into the Application 🚀
 
