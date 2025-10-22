@@ -23,6 +23,8 @@ namespace api.Controllers
         /// <response code="201">Created</response>
         /// <response code="422">Unprocessable Entity</response>
         /// <response code="400">Bad Request</response>
+        /// <response code="401">Unauthorized</response>
+        /// <response code="403">Forbidden</response>
         /// <response code="415">Unsupported Media Type</response>
         /// <response code="500">Internal Server Error</response>
         [HttpPost]
