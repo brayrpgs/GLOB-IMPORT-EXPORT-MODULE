@@ -141,6 +141,9 @@ namespace api.Services
             // Map CSV data to Project entity
             Project? project = ProjectMapper.ToProject(issueFromCSVs);
 
+            // Insert id of user
+            project!.UserProjectId = csvBase64.UserProject;
+
             // Insert project into the database
             List<Project>? projects = new ProjectRepository().PostProject(project!);
 
