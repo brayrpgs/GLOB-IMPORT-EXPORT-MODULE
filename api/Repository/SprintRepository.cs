@@ -51,6 +51,10 @@ namespace api.Repository
                 // Return the first Sprint from the list
                 return sprints?.FirstOrDefault();
             }
+            catch (Exception ex)
+            {
+                return null;
+            }
             finally
             {
                 // Ensure the DB connection is always closed

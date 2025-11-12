@@ -118,7 +118,7 @@ namespace api.Services
             // Set all issue properties using the builder methods
             this.SetSummary(string.IsNullOrWhiteSpace(ifcsv.Summary) ? "No summary" : ifcsv.Summary)
                 .SetDescription(string.IsNullOrWhiteSpace(ifcsv.Description) ? "No description" : ifcsv.Description)
-                .SetResolveDate(ifcsv.Resolved ?? DateTime.MaxValue) 
+                .SetResolveDate(ifcsv.Resolved ?? DateTime.MaxValue)
                 .SetDueDate(ifcsv.Duedate ?? DateTime.MaxValue)
                 .SetVotes(ifcsv.Votes ?? 0)
                 .SetOriginalEstimation(0)
@@ -127,8 +127,7 @@ namespace api.Services
                 //.SetParentSummary(ifcsv.Parentsummary)
                 .SetIssueType(issueTypeFromDB!)
                 .SetProjectId()
-                .SetSprintId(sprintFromDB!)
-                .SetStatusIssue(issueStatus);
+                .SetSprintId(sprintFromDB ?? new Sprint { Id = null });
 
             // Insert the issue into DB and return the persisted record
             Issue? issueInserted = new IssueRepository().Post(issue!);
